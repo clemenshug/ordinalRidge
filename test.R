@@ -1,6 +1,3 @@
-library(tidyverse)
-library(qs)
-
 ## Objective function to minimize
 ## K - n-by-n kernel matrix
 ## y - n-by-1 vector of (ordinal) labels
@@ -33,32 +30,38 @@ fobj <- function( K, y, v, b, lambda=1 ) {
     ## Compute the ridge penalty
     R2 <- lambda * t(v) %*% K %*% v / 2
 
-    ## Compute the ridge penalty and the overall objective
-    drop( R2 - LL)
+    ## Compute the overall objective value
+    drop(R2 - LL)
 }
 
-main <- function() {
-    Z <- qread("traindata.qs")
-
-    y <- pluck(Z, "Label")
-    X <- select(Z, -Label)
-    K <- X %>% t %>% cov
-
-    ## Kernalize the bias term
-    K1 <- rbind( K, 1 )
-    K0 <- cbind( rbind( K, 0 ), 0 )
-
+## Ordinal regression with a ridge regularization penalty
+## K - n-by-n kernel matrix
+## y - n-by-1 vector of (ordinal) labels
+## lambda - regularization coefficient
+## eps - convergence tolerance
+## maxIter - maximum number of iterations
+ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10 ) {
+    ## Determine the problem dimensions
     n <- nrow(K)
     p <- length(levels(y))-1
+
+    ## Kernalize the bias terms
+    K1 <- rbind( matrix(1,1,p) %x% K, diag(p) %x% matrix(1,1,n) )
+    K0 <- cbind( rbind(K, matrix(0,p,n)), matrix(0,n+p,p) )
+
+    ## Initial parameter estimates
     v <- rep(0, nrow(K))
     b <- rep(0, p)
 
-    lambda <- 0.1
-    eps <- 1e-5
+    fprev <- fobj(K, y, v, b, lambda)
+    cat( "Initial f = ", fprev, "\n" )
 
-    cat( "Initial objective function values: ", fobj(K, y, v, b, lambda), "\n" )
+    for( iter in 1:maxIter ) {
 
-    for( iter in 1:10 ) {
+        ## Build up residuals and weights across decision boundaries
+        aa <- c()
+        zz <- c()
+        
         for( k in 1:p ) {
             ## Labels are defined by Y >= k
             yk <- as.numeric( (as.integer(y)-1) >=k )
@@ -77,20 +80,44 @@ main <- function() {
             a[c(j0,j1)] <- eps
             z <- s + (yk - pr) / a
 
-            ## Solve the ridge regression task using closed form
-            A <- diag(a)
-            mdl <- solve( K1 %*% A %*% t(K1) + lambda * n * K0, K1 %*% A %*% z )
-
-            ## Update the weights
-            v <- mdl[-(n+1)]
-            b[k] <- mdl[n+1]
+            ## Contribute to the joint problem
+            aa <- c(aa, a)
+            zz <- c(zz, z)
         }
-        cat( "f = ", fobj(K, y, v, b, lambda), "after iteration", iter, "\n" )
+            
+        ## Solve the ridge regression task using closed form
+        A <- diag(aa)
+        mdl <- solve( K1 %*% A %*% t(K1) + lambda * n * K0, K1 %*% A %*% zz )
+
+        ## Update the weights
+        v <- mdl[1:n]
+        b <- mdl[(n+1):(n+p)]
+
+        f <- fobj(K, y, v, b, lambda)
+        if( abs(f - fprev) / abs(fprev) < eps ) break
+        else {
+            cat( "f = ", f, "after iteration", iter, "\n" )
+            fprev <- f
+        }
     }
+    cat( "Final f = ", f, "after iteration", iter, "\n" )
+
+    list( v=v, b=b )
+}
+
+main <- function() {
+    Z <- qs::qread("traindata.qs")
+
+    y <- purrr::pluck(Z, "Label")
+    X <- as.matrix( dplyr::select(Z, -Label) )
+    K <- cov(t(X))
+
+    mdl <- ordinalRidge( K, y )
 
     ## Compute the final ranking of samples by the model
-    ypred <- K %*% v
+    ypred <- K %*% mdl$v
 
     ## Report correlation against true labels
-    cat( "Final correlation =", cor(ypred, as.integer(y), method="kendall"), "\n" )
+    cat( "\n" )
+    cat( "Correlation against ground truth =", cor(ypred, as.integer(y), method="kendall"), "\n" )    
 }
