@@ -40,13 +40,16 @@ fobj <- function( K, y, v, b, lambda=1 ) {
 ## lambda - regularization coefficient
 ## eps - convergence tolerance
 ## maxIter - maximum number of iterations
-ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10 ) {
+## verbose - if TRUE, reports objective function value at each iteration
+ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
+                         verbose=TRUE ) {
     ## Determine the problem dimensions
     n <- nrow(K)
     p <- length(levels(y))-1
 
     ## Kernalize the bias terms
     K1 <- rbind( matrix(1,1,p) %x% K, diag(p) %x% matrix(1,1,n) )
+    K1t <- t(K1)
     K0 <- cbind( rbind(K, matrix(0,p,n)), matrix(0,n+p,p) )
 
     ## Initial parameter estimates
@@ -61,13 +64,14 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10 ) {
         ## Build up residuals and weights across decision boundaries
         aa <- c()
         zz <- c()
+        Kv <- K %*% v
         
         for( k in 1:p ) {
             ## Labels are defined by Y >= k
             yk <- as.numeric( (as.integer(y)-1) >=k )
     
             ## Compute the current fits
-            s <- drop(K %*% v + b[k])
+            s <- drop(Kv + b[k])
             pr <- 1 / (1 + exp(-s))
 
             ## Snap probabilities to 0 and 1 to avoid division by small numbers
@@ -86,8 +90,7 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10 ) {
         }
             
         ## Solve the ridge regression task using closed form
-        A <- diag(aa)
-        mdl <- solve( K1 %*% A %*% t(K1) + lambda * n * K0, K1 %*% A %*% zz )
+        mdl <- solve( K1 %*% (aa*K1t) + lambda * n * K0, K1 %*% (aa*zz) )
 
         ## Update the weights
         v <- mdl[1:n]
@@ -96,8 +99,8 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10 ) {
         f <- fobj(K, y, v, b, lambda)
         if( abs(f - fprev) / abs(fprev) < eps ) break
         else {
-            cat( "f = ", f, "after iteration", iter, "\n" )
             fprev <- f
+            if( verbose ) cat( "f = ", f, "after iteration", iter, "\n" )
         }
     }
     cat( "Final f = ", f, "after iteration", iter, "\n" )
@@ -112,7 +115,7 @@ main <- function() {
     X <- as.matrix( dplyr::select(Z, -Label) )
     K <- cov(t(X))
 
-    mdl <- ordinalRidge( K, y )
+    mdl <- ordinalRidge( K, y, verbose=FALSE )
 
     ## Compute the final ranking of samples by the model
     ypred <- K %*% mdl$v
