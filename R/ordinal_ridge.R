@@ -1,20 +1,21 @@
-## Objective function to minimize
-## K - n-by-n kernel matrix
-## y - n-by-1 vector of (ordinal) labels
-## v - kernel weights
-## b - vector of p bias terms, where p = #classes - 1
-## lambda - ridge regularization coefficient
+#' Objective function to minimize
+#'
+#' @param K n-by-n kernel matrix
+#' @param y n-by-1 vector of (ordinal) labels
+#' @param v kernel weights
+#' @param b vector of p bias terms, where p = #classes - 1
+#' @param lambda ridge regularization coefficient
 fobj <- function( K, y, v, b, lambda=1 ) {
     n <- nrow(K)
     p <- length(levels(y))-1
-    
+
     ## Argument verification
     stopifnot( is.ordered(y) )
     stopifnot( length(b) == p )
 
     ## Convert true labels to indices
     j <- as.integer(y)-1
-    
+
     ## Compute current fits for each threshold
     S <- t(t(matrix(K %*% v, n, p)) + b)
 
@@ -23,7 +24,7 @@ fobj <- function( K, y, v, b, lambda=1 ) {
 
     ## Threshold the fits according to the true label
     for( i in 1:ncol(S) ) S[,i] <- ifelse( j < i, 0, S[,i] )
-    
+
     ## Compute log-likelihood
     LL <- sum(S - DN) / n
 
@@ -34,13 +35,15 @@ fobj <- function( K, y, v, b, lambda=1 ) {
     drop(R2 - LL)
 }
 
-## Ordinal regression with a ridge regularization penalty
-## K - n-by-n kernel matrix
-## y - n-by-1 vector of (ordinal) labels
-## lambda - regularization coefficient
-## eps - convergence tolerance
-## maxIter - maximum number of iterations
-## verbose - if TRUE, reports objective function value at each iteration
+#' Ordinal regression with a ridge regularization penalty
+#'
+#' @param K n-by-n kernel matrix
+#' @param y n-by-1 vector of (ordinal) labels
+#' @param lambda regularization coefficient
+#' @param eps convergence tolerance
+#' @param maxIter maximum number of iterations
+#' @param verbose if TRUE, reports objective function value at each iteration
+#' @export
 ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
                          verbose=TRUE ) {
     ## Determine the problem dimensions
@@ -65,11 +68,11 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
         aa <- c()
         zz <- c()
         Kv <- K %*% v
-        
+
         for( k in 1:p ) {
             ## Labels are defined by Y >= k
             yk <- as.numeric( (as.integer(y)-1) >=k )
-    
+
             ## Compute the current fits
             s <- drop(Kv + b[k])
             pr <- 1 / (1 + exp(-s))
@@ -88,7 +91,7 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
             aa <- c(aa, a)
             zz <- c(zz, z)
         }
-            
+
         ## Solve the ridge regression task using closed form
         mdl <- solve( K1 %*% (aa*K1t) + lambda * n * K0, K1 %*% (aa*zz) )
 
@@ -106,21 +109,4 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
     cat( "Final f = ", f, "after iteration", iter, "\n" )
 
     list( v=v, b=b )
-}
-
-main <- function() {
-    Z <- qs::qread("traindata.qs")
-
-    y <- purrr::pluck(Z, "Label")
-    X <- as.matrix( dplyr::select(Z, -Label) )
-    K <- cov(t(X))
-
-    mdl <- ordinalRidge( K, y, verbose=FALSE )
-
-    ## Compute the final ranking of samples by the model
-    ypred <- K %*% mdl$v
-
-    ## Report correlation against true labels
-    cat( "\n" )
-    cat( "Correlation against ground truth =", cor(ypred, as.integer(y), method="kendall"), "\n" )    
 }
