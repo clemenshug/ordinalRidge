@@ -2,9 +2,12 @@
 % Please edit documentation in R/ordinal_ridge.R
 \name{ordinalRidge}
 \alias{ordinalRidge}
+\alias{predict.ordinalRidge}
 \title{Ordinal regression with a ridge regularization penalty}
 \usage{
 ordinalRidge(K, y, lambda = 0.1, eps = 1e-05, maxIter = 10, verbose = TRUE)
+
+\method{predict}{ordinalRidge}(mdl, newdata)
 }
 \arguments{
 \item{K}{n-by-n kernel matrix}
@@ -18,7 +21,16 @@ ordinalRidge(K, y, lambda = 0.1, eps = 1e-05, maxIter = 10, verbose = TRUE)
 \item{maxIter}{maximum number of iterations}
 
 \item{verbose}{if TRUE, reports objective function value at each iteration}
+
+\item{mdl}{model returned by \code{ordinalRidge()}}
+
+\item{newdata}{n-by-n kernel matrix to run predictions on}
 }
 \description{
 Ordinal regression with a ridge regularization penalty
 }
+\section{Methods (by generic)}{
+\itemize{
+\item \code{predict}: Predict method for ordinalRidge models
+}}
+
