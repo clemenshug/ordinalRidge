@@ -108,7 +108,7 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
     }
     cat( "Final f = ", f, "after iteration", iter, "\n" )
 
-    structure( list( v=v, b=b ), class="ordinalRidge" )
+    structure( predict_impl( list( v=v, b=b ), K ), class="ordinalRidge" )
 }
 
 #' @param mdl model returned by `ordinalRidge()`
@@ -116,5 +116,15 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
 #' @describeIn ordinalRidge Predict method for ordinalRidge models
 #' @export
 predict.ordinalRidge <- function( mdl, newdata ) {
-    newdata %*% mdl$v
+    predict_impl( mdl, newdata )
+}
+
+predict_impl <- function( mdl, newdata ) {
+    mdl$p <- NULL
+    mdl$class <- NULL
+    s <- newdata %*% mdl$v
+    p_cum <- apply( s, 1, function (x) 1 / (1 + exp(-x - mdl$b)) )
+    p <- apply( p_cum, 2, function (x) c(1, x) - c(x, 0) )
+    class <- apply( p, 2, which.max )
+    c( mdl, list( p=p, class=class ) )
 }
