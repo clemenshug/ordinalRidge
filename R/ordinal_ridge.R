@@ -93,7 +93,7 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
         }
 
         ## Solve the ridge regression task using closed form
-        mdl <- solve( K1 %*% (aa*K1t) + lambda * n * K0, K1 %*% (aa*zz) )
+        mdl <- MASS::ginv( K1 %*% (aa*K1t) + lambda * n * K0 ) %*% K1 %*% (aa*zz)
 
         ## Update the weights
         v <- mdl[1:n]
