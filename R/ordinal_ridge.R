@@ -3,8 +3,10 @@
 #' @param K n-by-n kernel matrix
 #' @param y n-by-1 vector of (ordinal) labels
 #' @param v kernel weights
-#' @param b vector of p bias terms, where p = #classes - 1
+#' @param b vector of nb bias terms, where nb = #classes - 1
 #' @param lambda ridge regularization coefficient
+#' @return Objective function value
+#' @export
 fobj <- function( K, y, v, b, lambda=1 ) {
     n <- nrow(K)
     p <- length(levels(y))-1

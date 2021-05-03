@@ -13,9 +13,12 @@ fobj(K, y, v, b, lambda = 1)
 
 \item{v}{kernel weights}
 
-\item{b}{vector of p bias terms, where p = #classes - 1}
+\item{b}{vector of nb bias terms, where nb = #classes - 1}
 
 \item{lambda}{ridge regularization coefficient}
+}
+\value{
+Objective function value
 }
 \description{
 Objective function to minimize
