@@ -2,10 +2,14 @@ Package: ordinalRidge
 Title: Fast solver for ordinal logistic regression with a ridge penalty
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "Artem",
-           family = "Sokolov",
-           role = c("aut", "cre"),
-           email = "artem.sokolov@gmail.com")
+    c(person(given  = "Artem",
+             family = "Sokolov",
+             role   = c("aut", "cre"),
+             email  = "artem.sokolov@gmail.com"),
+      person(given  = "Clemens",
+             family = "Hug",
+             role   = "aut",
+             email  = "clemens.hug@gmail.com"))
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
