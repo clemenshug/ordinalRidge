@@ -103,7 +103,7 @@ res <- predict(mdl, K1)
 #  [15,] 0.95443654 0.479613870
 ```
 
-We observe that points 11 and 15 get misclassified; the true labels for both are `2`, but they get misclassified as `1`. Looking at the `$score` output, we can see that both points are very close to the decision boundary (which is defined by `mdl$b[2]` or `-4.517127`) and happen to land on the negative side of it:
+We observe that points 11 and 15 get misclassified; the true labels for both are `2`, but they get misclassified as `1`. Looking at the `$score` output, we can see that both points are very close to the decision boundary (which is defined by `-mdl$b[2]` or `4.517127`) and happen to land on the negative side of it:
 ``` r
 res$score[11:15] + mdl$b[2]
 #  [1] -0.02595022  1.66543655  2.92179040  0.76676736 -0.08158975
