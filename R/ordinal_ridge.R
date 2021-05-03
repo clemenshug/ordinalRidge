@@ -137,15 +137,17 @@ predict_impl <- function( mdl, newdata ) {
     res <- list()
 
     ## Scores
-    res$score <- K %*% mdl$v
+    res$score <- newdata %*% mdl$v
 
     ## Predictions
     res$pred <- factor( cut(res$score, breaks=c(-Inf,-mdl$b,Inf)), ordered=TRUE )
-    levels(res$pred) <- res$classes
+    levels(res$pred) <- mdl$classes
 
     ## Probabilities
     res$prob <- t(apply( res$score, 1, function(x) 1 / (1 + exp(-x - mdl$b)) ))
     colnames(res$prob) <- paste0("Pr[y >= ", 1:length(mdl$b), "]")
 
+    ## Finalize the output
+    res$score <- drop(res$score)
     res
 }
