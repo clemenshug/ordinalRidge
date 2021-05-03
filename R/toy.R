@@ -10,7 +10,7 @@
 #' @return A list with the following elements:
 #' \describe{
 #'   \item{X}{A ns-by-p matrix of ns = sum(n) data points in p dimensions}
-#'   \item{y}{A matching ordered factor of length n containing true labels}
+#'   \item{y}{A matching ordered factor of length ns containing true labels}
 #' }
 #' @export
 toyData <- function( n, p, nb=6, stdev=1 ) {

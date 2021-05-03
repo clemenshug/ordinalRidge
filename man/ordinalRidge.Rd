@@ -24,7 +24,22 @@ ordinalRidge(K, y, lambda = 0.1, eps = 1e-05, maxIter = 10, verbose = TRUE)
 
 \item{mdl}{model returned by \code{ordinalRidge()}}
 
-\item{newdata}{n-by-n kernel matrix to run predictions on}
+\item{newdata}{n1-by-n kernel matrix of n1 new points against n points used for training}
+}
+\value{
+OrdinalRidge returns a list with the following elements:
+#' \describe{
+\item{v}{A n-by-1 vector of kernel weights}
+\item{b}{A nb-by-1 vector of bias terms to be used as decision boundaries}
+\item{classes}{Names of classes from the original vector of labels y}
+}
+
+predict() returns a list with the following elements:
+\describe{
+\item{score}{An n1-by-1 vector of scores}
+\item{pred}{A factor of length n1 containing predictions}
+\item{prob}{An n1-by-nb matrix of probabilities for each of the nb decision boundaries}
+}
 }
 \description{
 Ordinal regression with a ridge regularization penalty

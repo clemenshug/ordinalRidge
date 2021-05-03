@@ -45,6 +45,12 @@ fobj <- function( K, y, v, b, lambda=1 ) {
 #' @param eps convergence tolerance
 #' @param maxIter maximum number of iterations
 #' @param verbose if TRUE, reports objective function value at each iteration
+#' @return OrdinalRidge returns a list with the following elements:
+#' #' \describe{
+#'   \item{v}{A n-by-1 vector of kernel weights}
+#'   \item{b}{A nb-by-1 vector of bias terms to be used as decision boundaries}
+#'   \item{classes}{Names of classes from the original vector of labels y}
+#' }
 #' @export
 ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
                          verbose=TRUE ) {
@@ -110,23 +116,36 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
     }
     cat( "Final f = ", f, "after iteration", iter, "\n" )
 
-    structure( predict_impl( list( v=v, b=b ), K ), class="ordinalRidge" )
+    structure( list( v=v, b=b, classes=levels(y) ), class="ordinalRidge" )
 }
 
 #' @param mdl model returned by `ordinalRidge()`
-#' @param newdata n-by-n kernel matrix to run predictions on
+#' @param newdata n1-by-n kernel matrix of n1 new points against n points used for training
 #' @describeIn ordinalRidge Predict method for ordinalRidge models
+#' @return predict() returns a list with the following elements:
+#' \describe{
+#'   \item{score}{An n1-by-1 vector of scores}
+#'   \item{pred}{A factor of length n1 containing predictions}
+#'   \item{prob}{An n1-by-nb matrix of probabilities for each of the nb decision boundaries}
+#' }
 #' @export
 predict.ordinalRidge <- function( mdl, newdata ) {
     predict_impl( mdl, newdata )
 }
 
 predict_impl <- function( mdl, newdata ) {
-    mdl$p <- NULL
-    mdl$class <- NULL
-    s <- newdata %*% mdl$v
-    p_cum <- apply( s, 1, function (x) 1 / (1 + exp(-x - mdl$b)) )
-    p <- apply( p_cum, 2, function (x) c(1, x) - c(x, 0) )
-    class <- apply( p, 2, which.max )
-    c( mdl, list( p=p, class=class ) )
+    res <- list()
+
+    ## Scores
+    res$score <- K %*% mdl$v
+
+    ## Predictions
+    res$pred <- factor( cut(res$score, breaks=c(-Inf,-mdl$b,Inf)), ordered=TRUE )
+    levels(res$pred) <- res$classes
+
+    ## Probabilities
+    res$prob <- t(apply( res$score, 1, function(x) 1 / (1 + exp(-x - mdl$b)) ))
+    colnames(res$prob) <- paste0("Pr[y >= ", 1:length(mdl$b), "]")
+
+    res
 }
