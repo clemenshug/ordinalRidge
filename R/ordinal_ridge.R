@@ -151,3 +151,24 @@ predict_impl <- function( mdl, newdata ) {
     res$score <- drop(res$score)
     res
 }
+
+#' Evaluate rank prediction performance
+#'
+#' @param labels Ordered factor vector of true labels for each observation
+#' @param scores Numeric vector of a score ranking the observations in the predicted order
+#' @return A score between 0 and 1. Higher scores mean better prediction performance
+#' @export
+evaluate_ranking <- function( labels, scores ) {
+    intlabels <- as.integer( labels )
+    n <- 0
+    n_correct <- 0
+    for ( i in seq(1, max(intlabels) - 1L) ) {
+        for ( j in seq(i + 1L, max(intlabels)) ) {
+            iscores <- scores[intlabels == i]
+            jscores <- scores[intlabels == j]
+            n <- n + length( iscores ) * length( jscores )
+            n_correct <- n_correct + sum( outer( iscores, jscores, `<` ) )
+        }
+    }
+    n_correct / n
+}
