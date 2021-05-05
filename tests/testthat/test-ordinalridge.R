@@ -1,20 +1,18 @@
 test_that("fitting works", {
-  data( ad_data )
-  Y <- ad_data$Label
-  XX <- cov( t( ad_data[, names( ad_data ) != "Label"] )  )
-  mdl <- ordinalRidge( XX, Y )
-  expect_length( mdl$b, 6 )
-  expect_length( mdl$v, 259 )
+  Tr <- toyData( 5, 3, 2, stdev=0.5 )
+  XX <- cov( t(Tr$X) )
+  mdl <- ordinalRidge( XX, Tr$y )
+  expect_length( mdl$b, 2 )
+  expect_length( mdl$v, 15 )
 })
 
 test_that("predicting works", {
-  data( ad_data )
-  Y <- ad_data$Label
-  XX <- cov( t( ad_data[, names( ad_data ) != "Label"] )  )
-  mdl <- ordinalRidge( XX, Y )
+  Tr <- toyData( 5, 3, 2, stdev=0.5 )
+  XX <- cov( t(Tr$X) )
+  mdl <- ordinalRidge( XX, Tr$y )
   pred <- predict( mdl, XX )
-  expect_length( pred$class, 259 )
-  expect_equal( dim( pred$p ), c(7, 259) )
+  expect_length( pred$pred, 15 )
+  expect_equal( dim( pred$prob ), c(15, 2) )
 })
 
 test_that("ranking evaluation is accurate", {
