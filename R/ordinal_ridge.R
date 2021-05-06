@@ -163,7 +163,7 @@ predict_impl <- function( mdl, newdata ) {
     res$score <- `if`( mdl$kernel, newdata %*% mdl$v, newdata %*% mdl$w )
 
     ## Predictions
-    res$pred <- factor( cut(res$score, breaks=c(-Inf,-mdl$b,Inf)), ordered=TRUE )
+    res$pred <- cut( res$score, breaks=c(-Inf,-mdl$b,Inf), ordered_result=TRUE )
     levels(res$pred) <- mdl$classes
 
     ## Probabilities
