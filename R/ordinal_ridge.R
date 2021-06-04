@@ -39,8 +39,11 @@ fobj <- function( K, y, v, b, lambda=1 ) {
 
 #' Ordinal regression with a ridge regularization penalty
 #'
-#' @param K n-by-n kernel matrix
+#' @param K an n-by-p matrix of n samples in p dimensions or
+#'            an n-by-n kernel matrix
 #' @param y n-by-1 vector of (ordinal) labels
+#' @param kernel set TRUE if K is a kernel matrix
+#'            (Default: TRUE if K is a square matrix, FALSE otherwise)
 #' @param lambda regularization coefficient
 #' @param eps convergence tolerance
 #' @param maxIter maximum number of iterations
@@ -52,8 +55,28 @@ fobj <- function( K, y, v, b, lambda=1 ) {
 #'   \item{classes}{Names of classes from the original vector of labels y}
 #' }
 #' @export
-ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
+ordinalRidge <- function( K, y, kernel=(nrow(K)==ncol(K)),
+                         lambda=0.1, eps=1e-5, maxIter=10,
                          verbose=TRUE ) {
+    ## Are we working with raw features or a kernel matrix?
+    if( !kernel ) {
+        ## Compute a linear kernel (LK) matrix
+        ##  Scale by the number of features for numerical stability
+        LK <- K %*% t(K) / ncol(K)
+
+        ## Recurse, using the kernel formulation
+        mdl <- ordinalRidge( LK, y, TRUE, lambda / ncol(K),
+                            eps, maxIter, verbose )
+
+        ## Compute weights for the original features
+        mdl$w = t(K) %*% mdl$v / ncol(K)
+
+        ## Adjust other fields
+        mdl$v = NULL
+        mdl$kernel = FALSE
+        return(mdl)
+    }
+    
     ## Determine the problem dimensions
     n <- nrow(K)
     p <- length(levels(y))-1
@@ -116,7 +139,7 @@ ordinalRidge <- function( K, y, lambda=0.1, eps=1e-5, maxIter=10,
     }
     cat( "Final f = ", f, "after iteration", iter, "\n" )
 
-    structure( list( v=v, b=b, classes=levels(y) ), class="ordinalRidge" )
+    structure( list( v=v, b=b, classes=levels(y), kernel=TRUE ), class="ordinalRidge" )
 }
 
 #' @param mdl model returned by `ordinalRidge()`
@@ -137,7 +160,7 @@ predict_impl <- function( mdl, newdata ) {
     res <- list()
 
     ## Scores
-    res$score <- newdata %*% mdl$v
+    res$score <- `if`( mdl$kernel, newdata %*% mdl$v, newdata %*% mdl$w )
 
     ## Predictions
     res$pred <- factor( cut(res$score, breaks=c(-Inf,-mdl$b,Inf)), ordered=TRUE )
