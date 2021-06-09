@@ -76,7 +76,7 @@ ordinalRidge <- function( K, y, kernel=(nrow(K)==ncol(K)),
         mdl$kernel = FALSE
         return(mdl)
     }
-    
+
     ## Determine the problem dimensions
     n <- nrow(K)
     p <- length(levels(y))-1
@@ -177,11 +177,11 @@ predict_impl <- function( mdl, newdata ) {
 
 #' Evaluate rank prediction performance
 #'
-#' @param labels Ordered factor vector of true labels for each observation
 #' @param scores Numeric vector of a score ranking the observations in the predicted order
+#' @param labels Ordered factor vector of true labels for each observation
 #' @return A score between 0 and 1. Higher scores mean better prediction performance
 #' @export
-evaluate_ranking <- function( labels, scores ) {
+evaluateRanking <- function( scores, labels ) {
     intlabels <- as.integer( labels )
     n <- 0
     n_correct <- 0

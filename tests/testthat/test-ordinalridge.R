@@ -18,5 +18,5 @@ test_that("predicting works", {
 test_that("ranking evaluation is accurate", {
   lbl <- c( 1, 1, 1, 2, 2, 2, 3, 3, 3 )
   scores <- c( 0.1, 0.2, 1.5, 1.2, 1.1, 1.3, 1.8, 2.5, 0.3 )
-  expect_equal( evaluate_ranking(lbl, scores), 0.74074074 )
+  expect_equal( evaluateRanking(scores, lbl), 0.74074074 )
 })

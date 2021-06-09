@@ -5,14 +5,26 @@
 \alias{predict.ordinalRidge}
 \title{Ordinal regression with a ridge regularization penalty}
 \usage{
-ordinalRidge(K, y, lambda = 0.1, eps = 1e-05, maxIter = 10, verbose = TRUE)
+ordinalRidge(
+  K,
+  y,
+  kernel = (nrow(K) == ncol(K)),
+  lambda = 0.1,
+  eps = 1e-05,
+  maxIter = 10,
+  verbose = TRUE
+)
 
 \method{predict}{ordinalRidge}(mdl, newdata)
 }
 \arguments{
-\item{K}{n-by-n kernel matrix}
+\item{K}{an n-by-p matrix of n samples in p dimensions or
+an n-by-n kernel matrix}
 
 \item{y}{n-by-1 vector of (ordinal) labels}
+
+\item{kernel}{set TRUE if K is a kernel matrix
+(Default: TRUE if K is a square matrix, FALSE otherwise)}
 
 \item{lambda}{regularization coefficient}
 
