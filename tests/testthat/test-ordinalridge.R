@@ -38,3 +38,30 @@ test_that("estimates for matrices with large values are stable", {
   pred2 <- predict( mdl2, K )
   expect_equal(range(pred1$score - pred2$score), c(0, 0))
 })
+
+test_that("parsnip interface works", {
+  skip_if_not_installed("parsnip")
+  ## Generate data and compute a linear kernel
+  set.seed(42)
+  Tr <- toyData( 100, 3, 3, stdev=2 )
+
+  K <- Tr$X %*% t(Tr$X)
+
+  mdl_spec <- oridge_rbf() %>%
+    parsnip::set_engine("oridge")
+  mdl_fit <- mdl_spec %>%
+    fit_xy(x = Tr$X, y = Tr$y)
+
+  Te <- toyData( 100, 3, 3, stdev=2 )
+  pred <- predict(mdl_fit, new_data = Te$X, type = "prob")
+  pred <- predict(mdl_fit, new_data = Te$X, type = "raw")
+
+  ## Train a model using the original data and the kernel
+  mdl1 <- ordinalRidge( Tr$X, Tr$y )
+  mdl2 <- ordinalRidge( K, Tr$y )
+
+  ## Ensure that both models produce the same predictions
+  pred1 <- predict( mdl1, Tr$X )
+  pred2 <- predict( mdl2, K )
+  expect_equal(range(pred1$score - pred2$score), c(0, 0))
+})

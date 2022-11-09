@@ -58,6 +58,6 @@ Ordinal regression with a ridge regularization penalty
 }
 \section{Methods (by generic)}{
 \itemize{
-\item \code{predict}: Predict method for ordinalRidge models
-}}
+\item \code{predict(ordinalRidge)}: Predict method for ordinalRidge models
 
+}}

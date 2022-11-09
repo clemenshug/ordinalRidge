@@ -66,7 +66,7 @@ cum_to_single_probs <- function(df) {
   ) %>%
     t() %>%
     as_tibble() %>%
-    set_names(paste0("Pr[y == ", seq_len(ncol(.)), "]"))
+    set_names(paste0("Pr[y = ", seq_len(ncol(.)), "]"))
   df %>%
     select(-starts_with("Pr[")) %>%
     bind_cols(probs)
