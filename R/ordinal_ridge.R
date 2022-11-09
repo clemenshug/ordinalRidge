@@ -163,7 +163,14 @@ predict_impl <- function( mdl, newdata ) {
     res$score <- `if`( mdl$kernel, newdata %*% mdl$v, newdata %*% mdl$w )
 
     ## Predictions
-    res$pred <- cut( res$score, breaks=c(-Inf,-mdl$b,Inf), ordered_result=TRUE )
+    res$pred <- tryCatch(
+      cut(res$score, breaks=c(-Inf,-mdl$b,Inf), ordered_result=TRUE),
+      error = function(e) {
+        # warning(e)
+        warning("error applying model thresholds")
+        ordered(rep_len(NA, length(res$score)), levels = mdl$classes)
+      }
+    )
     levels(res$pred) <- mdl$classes
 
     ## Probabilities
