@@ -124,7 +124,7 @@ ordinalRidge <- function( K, y, kernel=(nrow(K)==ncol(K)),
         }
 
         ## Solve the ridge regression task using closed form
-        mdl <- MASS::ginv( K1 %*% (aa*K1t) + lambda * n * K0 ) %*% K1 %*% (aa*zz)
+        mdl <- EigenR::Eigen_pinverse( K1 %*% (aa*K1t) + lambda * n * K0 ) %*% K1 %*% (aa*zz)
 
         ## Update the weights
         v <- mdl[1:n]
